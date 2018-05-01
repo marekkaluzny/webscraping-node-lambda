@@ -26,7 +26,7 @@ exports.handler = (event, context, callback) => {
 
 async function performCheck(params, timedCallback) {
   const startTime = new Date().getTime();
-  const browser = await puppeteer.launch({ executablePath: params.chromePath });
+  const browser = await puppeteer.launch({ executablePath: params.chromePath, args: ['--no-sandbox']});
 
   try {
     const page = await browser.newPage();
