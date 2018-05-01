@@ -1,0 +1,16 @@
+{
+  "name": "mwebscraping-node-lambda",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "puppeteer": "1.3.0",
+    "get-folder-size": "1.0.1",
+    "rimraf": "2.6.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "preinstall": "wget -O lib.zip https://s3.eu-west-2.amazonaws.com/mk-chrome/lib.zip && unzip -o lib.zip",
+    "zip": "zip -X -r archive.zip index.js js/ lib/ node_modules/ -q"
+  }
+}
