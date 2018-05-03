@@ -2,20 +2,15 @@
 
 const puppeteer = require('puppeteer');
 const dataDog = require('./js/DataDog.js');
+const FileUtils = require('./js/FileUtils.js');
 const LAMBDA_CHROME_PATH = "/var/task/lib/headless-chromium";
-const DEFAULT_TIMEOUT = 8000;
+const DEFAULT_TIMEOUT = 15000;
 const defaultChromeFlags = [
-  '--disable-gpu',
-  '--window-size=1280x1696', // Letter size
   '--no-sandbox',
-  '--user-data-dir=/tmp/chrome/user-data',
-  '--hide-scrollbars',
-  '--incognito',
+  '--disable-gpu',
+  '--disable-setuid-sandbox',
   '--single-process',
-  '--data-path=/tmp/chrome/data-path',
-  '--ignore-certificate-errors',
-  '--homedir=/tmp/chrome',
-  '--disk-cache-dir=/tmp/chrome/cache-dir'
+  '--headless'
 ];
 
 var instantiated_date = new Date();
@@ -40,23 +35,32 @@ exports.handler = (event, context, callback) => {
 async function performCheck(params, timedCallback) {
   const startTime = new Date().getTime();
   const browser = await puppeteer.launch({ executablePath: params.chromePath, args: defaultChromeFlags });
+  const page = await browser.newPage();
 
-  try {
-    const page = await browser.newPage();
+  try {    
     page.setDefaultNavigationTimeout(DEFAULT_TIMEOUT);
     // login page
     await page.setViewport({ width: 1024, height: 768 });
     await page.goto(params.url);
-    await page.waitForNavigation();
-
+    
     //type credentials and submit
     await page.type('input[name="username"]', params.login);
     await page.type('input[name="password"]', params.password);
     await page.click('button[type="submit"]');
-    await page.waitForNavigation();
+    
     //verify login
     await page.waitForSelector('top-bar[is-logged-in="isLoggedIn"]', { timeout: DEFAULT_TIMEOUT });
   } catch (err) {
+    const DEBUG = process.env.DEBUG;
+    const BUCKET_NAME = process.env.BUCKET_NAME;
+    
+    if (DEBUG && BUCKET_NAME) {
+      console.log("Taking screenshot into: ", BUCKET_NAME);
+      const buffer = await page.screenshot();
+      FileUtils.uploadToS3(buffer, BUCKET_NAME);
+      buffer=null;      
+    }
+
     throw 'Page scrapping exception. Error: ' + err;
   } finally {
     if (typeof timedCallback === "function") {
