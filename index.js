@@ -13,14 +13,14 @@ const defaultChromeFlags = [
   '--headless'
 ];
 
-var instantiated_date = new Date();
+let instantiated_date = new Date();
 
 exports.handler = (event, context, callback) => {
   (async () => {
     console.log("Lambda handler trigerred. Function instantiated: " + instantiated_date);
 
     try {
-      var envParams = getInitialParameters();
+      let envParams = getInitialParameters();
       await performCheck(envParams, timedCallback).then(function () {
         success();
         callback(null, "done.");
@@ -56,7 +56,7 @@ async function performCheck(params, timedCallback) {
     
     if (DEBUG && BUCKET_NAME) {
       console.log("Taking screenshot into: ", BUCKET_NAME);
-      const buffer = await page.screenshot();
+      let buffer = await page.screenshot();
       FileUtils.uploadToS3(buffer, BUCKET_NAME);
       buffer=null;      
     }
@@ -73,7 +73,7 @@ async function performCheck(params, timedCallback) {
 
 //We expect following env variables. Please make sure they are set
 function getInitialParameters() {
-  var failure = false;
+  let failure = false;
   if (!process.env.URL) { console.log('please set environment variable URL'); failure = true; }
   if (!process.env.LOGIN) { console.log('please set environment variable LOGIN'); failure = true; }
   if (!process.env.ENV_TAG) { console.log('please set environment variable ENV_TAG'); failure = true; }
